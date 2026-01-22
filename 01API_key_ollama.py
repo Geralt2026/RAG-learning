@@ -1,9 +1,10 @@
 import os
 from openai import OpenAI
-
+# 1. 获取Client对象，OpenAI类对象
 client = OpenAI(  
     base_url="http://localhost:11434/v1",
 )
+# 2. 调用模型
 completion = client.chat.completions.create(
     model="qwen3:4b",
     messages=[
