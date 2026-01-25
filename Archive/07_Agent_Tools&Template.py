@@ -1,28 +1,34 @@
 from langchain_ollama import ChatOllama
-# 关键修改：调整 Agent 相关组件的导入路径
-from langchain.agents import create_react_agent
-from langchain.agents import AgentExecutor as LangChainAgentExecutor
+from langchain.agents import create_react_agent, AgentExecutor
 from langchain import hub
 from langchain.tools import Tool
-from langchain_community.utilities import SerpAPIWrapper
 from langchain_community.chains.llm_math.base import LLMMathChain
+# 导入Tavily搜索工具（替代SerpAPI）
+from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 
-# --- 初始化部分 ---
-# 初始化 Ollama 大模型
+# --- 初始化核心组件 ---
+# 初始化Ollama大模型
 llm = ChatOllama(model="qwen3:4b", temperature=0)
 
-# 初始化搜索工具（需要配置 SerpAPI Key）
-# 注意：使用 SerpAPI 需要先在 https://serpapi.com/ 获取 API Key，并设置环境变量
-search = SerpAPIWrapper()
-# 初始化数学计算工具
+# 1. 初始化Tavily搜索工具（替换SerpAPI）
+# 方式1：通过环境变量设置API Key（推荐）
+# Windows: set TAVILY_API_KEY=你的Tavily API Key
+# Mac/Linux: export TAVILY_API_KEY=你的Tavily API Key
+# 方式2：直接在代码中设置（测试用）
+import os
+os.environ["TAVILY_API_KEY"] = "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"  # 替换为你的Key
+
+tavily_search = TavilySearchAPIWrapper()
+
+# 2. 初始化数学计算工具（无需API Key）
 llm_math_chain = LLMMathChain.from_llm(llm=llm)
 
-# 定义工具列表
+# --- 定义工具列表（无SerpAPI依赖） ---
 tools = [
     Tool(
         name="Search",
-        func=search.run,
-        description="适用于查询当前事件、最新信息、名人近况等需要联网获取的内容"
+        func=tavily_search.run,
+        description="适用于查询当前事件、名人近况、最新资讯等需要联网获取的信息"
     ),
     Tool(
         name="Calculator",
@@ -31,12 +37,12 @@ tools = [
     )
 ]
 
-# 获取 REACT 提示词模板（如果网络问题拉取失败，可手动定义）
+# --- 构建Agent并运行 ---
+# 拉取REACT提示词模板（失败则用本地备用模板）
 try:
     prompt = hub.pull("hwchase17/react")
 except Exception as e:
-    print(f"拉取 hub 模板失败: {e}")
-    # 手动定义简化版 REACT 提示词模板（备用方案）
+    print(f"拉取hub模板失败，使用本地备用模板: {e}")
     from langchain.prompts import PromptTemplate
     prompt = PromptTemplate.from_template("""Answer the following questions as best you can. You have access to the following tools:
 
@@ -58,19 +64,16 @@ Begin!
 Question: {input}
 Thought: {agent_scratchpad}""")
 
-# 构建 REACT Agent
+# 构建Agent和执行器
 agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
-
-# 构建 Agent 执行器
-agent_executor = LangChainAgentExecutor(
+agent_executor = AgentExecutor(
     agent=agent,
     tools=tools,
     verbose=True,
     handle_parsing_errors=True,
-    # 新增：设置最大迭代次数，避免无限循环
-    max_iterations=10
+    max_iterations=10  # 避免无限循环
 )
 
-# 执行查询：查询小李子的现任女友
-result = agent_executor.invoke({"input": "Who is Leo DiCaprio's girlfriend?"})
+# 测试运行（查询小李子女友，无需SerpAPI）
+result = agent_executor.invoke({"input": "Who is Leo DiCaprio's girlfriend in 2026?"})
 print("\n最终回答：", result["output"])
