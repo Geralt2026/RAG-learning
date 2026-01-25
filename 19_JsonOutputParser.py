@@ -38,3 +38,12 @@ chain = first_prompt | model | json_parser | second_prompt | model
 res = chain.invoke({"lastname": "张", "gender": "女儿"})
 print(res.content)
 print(type(res))
+
+
+# 在构建链的时候要注意整体兼容性，注意前后组件的输入和输出要求。
+# 模型输入：PromptValue或字符串或序列（BaseMessage、list、tuple、str、dict）。
+# 模型输出：AIMessage
+# 提示词模板输入：要求是字典
+# 提示词模板输出：PromptValue对象
+# StrOutputParser：AIMessage输入、str输出
+# JsonOutputParser:AIMessage输入、dict输出
