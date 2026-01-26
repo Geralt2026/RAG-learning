@@ -93,3 +93,5 @@ if __name__ == "__main__":
     service = KnowledgeBaseService()
     r = service.upload_by_str("你好，我是Beamus Wayne", "test.txt")
     print(r)
+
+    
