@@ -95,7 +95,7 @@ class RAGService(object):
 
 
 if __name__ == "__main__":
-    session_config = {"configurable": {"session_id": "user_001"}}
+    session_config = config.session_config
 
     result = RAGService().chain.invoke(
         {"input": "我150斤，适合穿什么？"}, config=session_config
