@@ -1,16 +1,17 @@
 """此示例演示如何使用 Pydantic AI 根据用户输入生成 SQL 查询。
 
-Run postgres with:
-
-    mkdir postgres-data
-    docker run --rm -e POSTGRES_PASSWORD=postgres -p 54320:5432 postgres
+MySQL 需事先启动，并通过环境变量配置：
+MYSQL_HOST、MYSQL_PORT、MYSQL_USER、MYSQL_PASSWORD、MYSQL_DATABASE（默认 sql_gen）。
 
 Run with:
 
-    uv run -m pydantic_ai_examples.sql_gen "show me logs from yesterday, with level 'error'"
+    pip install aiomysql
+    python sql_gen.py
+    python sql_gen.py "show me logs from yesterday, with level 'error'"
 """
 
 import asyncio
+import os
 import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -18,7 +19,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Any, TypeAlias
 
-import asyncpg
+import aiomysql
 import logfire
 from annotated_types import MinLen
 from devtools import debug
@@ -28,7 +29,6 @@ from pydantic_ai import Agent, ModelRetry, RunContext, format_as_xml
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from openai import AsyncOpenAI
-import os
 
 # 创建OpenAI客户端
 client = AsyncOpenAI(
@@ -41,46 +41,45 @@ model = OpenAIChatModel("qwen-max", provider=OpenAIProvider(openai_client=client
 
 # 配置日志
 logfire.configure(send_to_logfire=False)
-logfire.instrument_asyncpg()
 logfire.instrument_pydantic_ai()
 
-# 创建数据库表结构
+# 创建数据库表结构（MySQL 语法）
 DB_SCHEMA = """
-CREATE TABLE records (
-    created_at timestamptz,
-    start_timestamp timestamptz,
-    end_timestamp timestamptz,
-    trace_id text,
-    span_id text,
-    parent_span_id text,
-    level log_level,
-    span_name text,
-    message text,
-    attributes_json_schema text,
-    attributes jsonb,
-    tags text[],
-    is_exception boolean,
-    otel_status_message text,
-    service_name text
+CREATE TABLE IF NOT EXISTS records (
+    created_at DATETIME(6),
+    start_timestamp DATETIME(6),
+    end_timestamp DATETIME(6),
+    trace_id TEXT,
+    span_id TEXT,
+    parent_span_id TEXT,
+    level ENUM('debug','info','warning','error','critical'),
+    span_name TEXT,
+    message TEXT,
+    attributes_json_schema TEXT,
+    attributes JSON,
+    tags JSON,
+    is_exception BOOLEAN,
+    otel_status_message TEXT,
+    service_name TEXT
 );
 """
-# 创建SQL查询示例
+# 创建SQL查询示例（MySQL 语法）
 SQL_EXAMPLES = [
     {
-        'request': 'show me records where foobar is false',
-        'response': "SELECT * FROM records WHERE attributes->>'foobar' = false",
+        'request': '显示所有foobar为false的记录',
+        'response': "SELECT * FROM records WHERE JSON_UNQUOTE(JSON_EXTRACT(attributes, '$.foobar')) = 'false'",
     },
     {
-        'request': 'show me records where attributes include the key "foobar"',
-        'response': "SELECT * FROM records WHERE attributes ? 'foobar'",
+        'request': '显示包含属性foobar的记录',
+        'response': "SELECT * FROM records WHERE JSON_CONTAINS_PATH(attributes, 'one', '$.foobar')",
     },
     {
-        'request': 'show me records from yesterday',
-        'response': "SELECT * FROM records WHERE start_timestamp::date > CURRENT_TIMESTAMP - INTERVAL '1 day'",
+        'request': '显示昨天的记录',
+        'response': "SELECT * FROM records WHERE DATE(start_timestamp) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)",
     },
     {
-        'request': 'show me error records with the tag "foobar"',
-        'response': "SELECT * FROM records WHERE level = 'error' and 'foobar' = ANY(tags)",
+        'request': '显示包含标签foobar的错误记录',
+        'response': "SELECT * FROM records WHERE level = 'error' AND JSON_CONTAINS(tags, '\"foobar\"')",
     },
 ]
 
@@ -88,22 +87,23 @@ SQL_EXAMPLES = [
 # 创建依赖类
 @dataclass
 class Deps:
-    conn: asyncpg.Connection
+    conn: aiomysql.Connection
 
 
 # 创建成功响应类
 class Success(BaseModel):
-    """Response when SQL could be successfully generated."""
+    """当SQL可以成功生成时的响应。"""
 
     sql_query: Annotated[str, MinLen(1)]
     explanation: str = Field(
-        '', description='Explanation of the SQL query, as markdown'
+        '',
+        description='SQL查询的解释，作为markdown',
     )
 
 
 # 创建无效请求响应类
 class InvalidRequest(BaseModel):
-    """Response the user input didn't include enough information to generate SQL."""
+    """用户输入没有足够信息生成SQL时的响应。"""
 
     error_message: str
 
@@ -113,7 +113,6 @@ Response: TypeAlias = Success | InvalidRequest
 # 创建Agent
 agent = Agent[Deps, Response](
     model,
-    # Type ignore while we wait for PEP-0747, nonetheless unions will work fine everywhere else
     output_type=Response,  # type: ignore
     deps_type=Deps,
 )
@@ -123,15 +122,16 @@ agent = Agent[Deps, Response](
 @agent.system_prompt
 async def system_prompt() -> str:
     return f"""\
-Given the following PostgreSQL table of records, your job is to
-write a SQL query that suits the user's request.
+给定以下 MySQL 表中的记录，你的任务是
+编写一个适合用户请求的 SQL 查询。
 
-Database schema:
+数据库表结构:
 
 {DB_SCHEMA}
 
-today's date = {date.today()}
+今天的日期 = {date.today()}
 
+SQL 查询示例（MySQL 语法，使用 JSON 函数等）:
 {format_as_xml(SQL_EXAMPLES)}
 """
 
@@ -142,15 +142,16 @@ async def validate_output(ctx: RunContext[Deps], output: Response) -> Response:
     if isinstance(output, InvalidRequest):
         return output
 
-    # gemini often adds extraneous backslashes to SQL
+    # 有时LLM会添加不必要的反斜杠到SQL
     output.sql_query = output.sql_query.replace('\\', '')
-    if not output.sql_query.upper().startswith('SELECT'):
-        raise ModelRetry('Please create a SELECT query')
+    if not output.sql_query.upper().strip().startswith('SELECT'):
+        raise ModelRetry('请创建一个SELECT查询')
 
     try:
-        await ctx.deps.conn.execute(f'EXPLAIN {output.sql_query}')
-    except asyncpg.exceptions.PostgresError as e:
-        raise ModelRetry(f'Invalid query: {e}') from e
+        async with ctx.deps.conn.cursor() as cur:
+            await cur.execute(f'EXPLAIN {output.sql_query}')
+    except aiomysql.Error as e:
+        raise ModelRetry(f'无效查询: {e}') from e
     else:
         return output
 
@@ -158,13 +159,11 @@ async def validate_output(ctx: RunContext[Deps], output: Response) -> Response:
 # 主函数
 async def main():
     if len(sys.argv) == 1:
-        prompt = 'show me logs from yesterday, with level "error"'
+        prompt = '显示昨天的错误记录'
     else:
         prompt = sys.argv[1]
 
-    async with database_connect(
-        'postgresql://postgres:postgres@localhost:54320', 'pydantic_ai_sql_gen'
-    ) as conn:
+    async with database_connect() as conn:
         deps = Deps(conn)
         result = await agent.run(prompt, deps=deps)
     debug(result.output)
@@ -172,30 +171,43 @@ async def main():
 
 # 创建数据库连接
 @asynccontextmanager
-async def database_connect(server_dsn: str, database: str) -> AsyncGenerator[Any, None]:
-    with logfire.span('check and create DB'):
-        conn = await asyncpg.connect(server_dsn)
-        try:
-            db_exists = await conn.fetchval(
-                'SELECT 1 FROM pg_database WHERE datname = $1', database
-            )
-            if not db_exists:
-                await conn.execute(f'CREATE DATABASE {database}')
-        finally:
-            await conn.close()
+async def database_connect() -> AsyncGenerator[Any, None]:
+    host = os.getenv('MYSQL_HOST', '127.0.0.1')
+    port = int(os.getenv('MYSQL_PORT', '3306'))
+    user = os.getenv('MYSQL_USER', 'root')
+    password = os.getenv('MYSQL_PASSWORD', '1234')
+    database = os.getenv('MYSQL_DATABASE', 'sql_gen')
 
-    conn = await asyncpg.connect(f'{server_dsn}/{database}')
+    with logfire.span('检查并创建数据库'):
+        conn = await aiomysql.connect(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+        )
+        try:
+            async with conn.cursor() as cur:
+                await cur.execute(f'CREATE DATABASE IF NOT EXISTS `{database}`')
+                await conn.commit()
+        finally:
+            conn.close()
+
+    conn = await aiomysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        db=database,
+        charset='utf8mb4',
+    )
     try:
-        with logfire.span('create schema'):
-            async with conn.transaction():
-                if not db_exists:
-                    await conn.execute(
-                        "CREATE TYPE log_level AS ENUM ('debug', 'info', 'warning', 'error', 'critical')"
-                    )
-                    await conn.execute(DB_SCHEMA)
+        with logfire.span('创建表结构'):
+            async with conn.cursor() as cur:
+                await cur.execute(DB_SCHEMA)
+                await conn.commit()
         yield conn
     finally:
-        await conn.close()
+        conn.close()
 
 
 if __name__ == '__main__':
