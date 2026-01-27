@@ -24,7 +24,6 @@ class MyModel(BaseModel):
 # 配置阿里云百炼的 OpenAI 兼容 API
 # API Key 从环境变量读取（DASHSCOPE_API_KEY 或 OPENAI_API_KEY）
 api_key = os.getenv('DASHSCOPE_API_KEY') or os.getenv('OPENAI_API_KEY')
-
 if not api_key:
     raise ValueError(
         "请设置环境变量 DASHSCOPE_API_KEY（阿里云百炼 API Key）\n"
