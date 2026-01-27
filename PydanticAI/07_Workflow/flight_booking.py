@@ -81,7 +81,7 @@ extraction_agent = Agent(
 @search_agent.tool
 async def extract_flights(ctx: RunContext[Deps]) -> list[FlightDetails]:
     """获取所有航班的详情。"""
-    # we pass the usage to the search agent so requests within this agent are counted
+    # 我们将使用情况传递给搜索Agent，以便计算此Agent中的请求数量
     result = await extraction_agent.run(ctx.deps.web_page_text, usage=ctx.usage)
     logfire.info('found {flight_count} flights', flight_count=len(result.output))
     return result.output
@@ -126,11 +126,12 @@ class Failed(BaseModel):
 seat_preference_agent = Agent[None, SeatPreference | Failed](
     model,
     output_type=SeatPreference | Failed,
+    retries=3,
     system_prompt=(
-        "提取用户的座位偏好。 "
-        '座位A和F是靠窗座位。 '
-        '第1排是前排，有额外的腿部空间。 '
-        '第14排和第20排也有额外的腿部空间。 '
+        "提取用户的座位偏好。你必须仅输出一个 JSON 对象，不可输出解释性文字。"
+        "若用户输入为空、不清楚或无法解析为「排数+座位号」（如 20A、第14排F），必须返回 Failed 表示无法提取。"
+        "座位 A 和 F 靠窗，第 1/14/20 排腿部空间大。"
+        "合法格式示例：{\"row\": 20, \"seat\": \"A\"} 或 Failed。"
     ),
 )
 
@@ -229,13 +230,17 @@ async def main():
                 )
 
 
+
 async def find_seat(usage: RunUsage) -> SeatPreference:
     message_history: list[ModelMessage] | None = None
     while True:
-        answer = Prompt.ask('你想坐哪个座位？ 请输入：1-30/A-F')
+        answer = Prompt.ask('你想坐哪个座位？ 请输入：1-30/A-F（例如 20A）')
+        if not (answer and answer.strip()):
+            print('请输入座位，例如 20A 或 第14排F。')
+            continue
 
         result = await seat_preference_agent.run(
-            answer,
+            answer.strip(),
             message_history=message_history,
             usage=usage,
             usage_limits=usage_limits,
@@ -243,7 +248,7 @@ async def find_seat(usage: RunUsage) -> SeatPreference:
         if isinstance(result.output, SeatPreference):
             return result.output
         else:
-            print('无法理解座位偏好。请再试一次。')
+            print('无法理解座位偏好。请再试一次，输入例如 20A。')
             message_history = result.all_messages()
 
 
