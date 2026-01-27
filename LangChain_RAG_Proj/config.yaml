@@ -1,0 +1,48 @@
+# RAG 项目配置文件
+# 使用 YAML 格式，符合企业开发规范
+
+# 文件路径配置
+paths:
+  md5_path: "LangChain_RAG_Proj/data/md5.txt"
+  chroma_persist_directory: "LangChain_RAG_Proj/data/chroma_db"
+  chat_history_directory: "LangChain_RAG_Proj/chat_history"
+
+# Chroma 向量数据库配置
+chroma:
+  collection_name: "rag"
+  persist_directory: "LangChain_RAG_Proj/data/chroma_db"
+
+# 文本切分配置
+text_splitter:
+  chunk_size: 1000  # 每个文本块的最大字符数
+  chunk_overlap: 50  # 文本块之间的重叠字符数
+  max_split_char_number: 1000  # 文本长度超过此值才进行切分
+  separators:
+    - "\n\n"
+    - "\n"
+    - "。"
+    - "，"
+    - "？"
+    - "！"
+    - "："
+    - "；"
+    - "、"
+    - "|"
+    - " "
+
+# 检索配置
+retrieval:
+  similarity_threshold: 1  # 检索返回匹配文档的数量（k值）
+
+# 模型配置
+models:
+  embedding_model: "text-embedding-v4"  # 嵌入模型名称
+  chat_model: "qwen3-max"  # 对话模型名称
+
+# 会话配置
+session:
+  default_session_id: "user_001"
+
+# 元数据配置
+metadata:
+  operator: "Beamus Wayne"
