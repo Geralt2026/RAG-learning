@@ -1,3 +1,4 @@
+import time
 from pydantic import BaseModel
 
 from pydantic_ai import Agent
@@ -14,6 +15,10 @@ ollama_model = OpenAIChatModel(
     model_name='qwen3:4b',
     provider=OllamaProvider(base_url='http://localhost:11434/v1'),
 )
+
+
+start_time = time.perf_counter()
+
 # 创建Agent对象  Agent对象是PydanticAI的入口，用于执行任务  model是模型，output_type是输出类型
 agent = Agent(ollama_model, output_type=CityLocation)
 
@@ -25,3 +30,6 @@ print(result.output)
 
 # 输出使用情况  使用情况是一个RunUsage对象  input_tokens=411, output_tokens=4863, requests=2
 print(result.usage())
+
+end_time = time.perf_counter()
+print(f"Time taken: {end_time - start_time:.2f} seconds")
