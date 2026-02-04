@@ -94,7 +94,7 @@ streamlit run app_file_uploader.py  # 启动文件上传界面
 ### LLM 提供商
 - **OpenAI GPT**: 商业 API
 - **Ollama**: 本地大模型（qwen3, qwen3-embedding）
-- **阿里云百炼**: 通义千问（qwen3-max, text-embedding-v4）
+- **阿里云百炼**: 通义千问（qwen-max, text-embedding-v4）
 
 ### 向量数据库
 - **Chroma**: 开源向量数据库

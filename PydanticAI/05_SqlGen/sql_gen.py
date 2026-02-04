@@ -110,6 +110,8 @@ class InvalidRequest(BaseModel):
 
 # 创建响应类型别名
 Response: TypeAlias = Success | InvalidRequest
+
+
 # 创建Agent
 agent = Agent[Deps, Response](
     model,
