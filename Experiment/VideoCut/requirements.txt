@@ -1,0 +1,30 @@
+# 智能视频合成与防重复系统 - 依赖
+# Python 3.11+
+
+# 配置与模型
+pydantic>=2.0
+pydantic-settings>=2.0
+
+# Web API
+fastapi>=0.100
+uvicorn[standard]>=0.22
+
+# 分镜脚本
+PyYAML>=6.0
+
+# 防重复：帧哈希与图像
+opencv-python-headless>=4.8
+imagehash>=4.3
+Pillow>=10.0
+
+# 可选：LangGraph（编排可先用内置状态机，后续可接入）
+# langgraph>=0.0.20
+# langchain-core>=0.2
+
+# 可选：数据库
+# sqlalchemy>=2.0
+# aiosqlite>=0.19
+
+# 可选：任务队列
+# celery[redis]>=5.3
+# redis>=5.0

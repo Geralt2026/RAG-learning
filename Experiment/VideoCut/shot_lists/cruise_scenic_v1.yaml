@@ -1,0 +1,27 @@
+# 邮轮+景区混剪模板 v1
+name: "邮轮+景区混剪模板 v1"
+version: "1.0"
+total_duration_target: 60
+
+shots:
+  - slot: 1
+    type: library
+    constraints:
+      tags: ["cruise", "deck", "wide"]
+      duration_range: [5, 10]
+      shot_type: wide
+  - slot: 2
+    type: user_upload
+    user_slot_id: intro
+    constraints:
+      duration_range: [3, 8]
+  - slot: 3
+    type: library
+    constraints:
+      tags: ["scenic", "mountain", "china"]
+      duration_range: [4, 8]
+  - slot: 4
+    type: library
+    constraints:
+      tags: ["cruise", "sunset"]
+      duration_range: [5, 12]

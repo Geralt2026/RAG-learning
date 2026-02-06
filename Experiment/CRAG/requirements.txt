@@ -1,0 +1,40 @@
+# CRAG 知识库问答 - 依赖
+# Python >=3.10
+
+# 向量库与 LangChain
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-chroma>=0.1.0
+langchain-text-splitters>=0.3.0
+
+# Embedding / LLM（按需二选一或都装）
+# Ollama 本地
+langchain-community[ollama]
+
+# OpenAI 兼容（可选）
+langchain-openai>=0.2.0
+
+# Chroma
+chromadb>=0.4.0
+
+# PDF 与图像
+PyMuPDF>=1.24.0
+Pillow>=10.0.0
+
+# MinerU 文本识别（PDF 版面分析 + 文本抽取）
+# 需 transformers>=4.56.0
+transformers>=4.56.0
+modelscope>=1.20.0
+mineru-vl-utils
+accelerate
+torch
+
+# PydanticAI（LLM 统一走 PydanticAI + 通义 qwen3-max）
+pydantic-ai>=0.0.20
+openai>=1.0.0
+
+# 接口
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+streamlit>=1.35.0
+pydantic>=2.0
