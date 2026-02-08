@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-FastAPI 接口：问答与知识库重建
-构建知识库强制使用 MinerU，通过子进程执行以避免在主进程加载 MinerU 时触发依赖冲突（如 frontend）。
+FastAPI 接口（PydanticAI 版）：问答与知识库重建
 """
 import os
 import subprocess
@@ -13,13 +12,12 @@ from pydantic import BaseModel, Field
 
 from crag import run_crag
 
-# 本模块所在目录，用于子进程 cwd
 CRAG_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(
     title="CRAG 知识库问答",
-    description="基于 Corrective RAG 的知识库问答 API",
-    version="1.0.0",
+    description="基于 PydanticAI + Corrective RAG 的知识库问答 API",
+    version="2.0.0",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -47,7 +45,7 @@ class BuildKBResponse(BaseModel):
 
 @app.post("/ask", response_model=AskResponse)
 def ask(req: AskRequest):
-    """提交问题，返回 CRAG 生成的回答及动作类型。"""
+    """提交问题，返回 CRAG 生成的回答及动作类型（内部使用 PydanticAI）。"""
     try:
         result = run_crag(req.question)
         return AskResponse(
@@ -62,9 +60,8 @@ def ask(req: AskRequest):
 
 @app.post("/build_kb", response_model=BuildKBResponse)
 def build_kb(force_rebuild: bool = False):
-    """使用 MinerU 从 Files 目录加载 PDF 并构建向量库。在子进程中执行以避免主进程导入 MinerU 时的依赖冲突。"""
+    """使用 MinerU 从 Files 目录加载 PDF 并构建向量库（子进程执行）。"""
     try:
-        # 在独立子进程中执行构建，确保 MinerU 在干净解释器中加载，避免与 FastAPI/uvicorn 已加载模块冲突（如 frontend）
         code = (
             "from knowledge_base import build_knowledge_base; "
             "print(build_knowledge_base(force_rebuild=%s))" % str(force_rebuild)
@@ -87,7 +84,7 @@ def build_kb(force_rebuild: bool = False):
             )
         return BuildKBResponse(message=stdout or "构建完成。")
     except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=504, detail="构建超时（MinerU 处理 PDF 可能较久），请稍后重试或改用命令行构建。")
+        raise HTTPException(status_code=504, detail="构建超时，请稍后重试或改用命令行构建。")
     except HTTPException:
         raise
     except Exception as e:
