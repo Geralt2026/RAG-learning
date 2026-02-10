@@ -239,10 +239,10 @@ Refine(D)  Web(W(x))  Refine(D) + Web(W(x))
 
 ### 8.2 安装依赖
 
-在项目根目录或 `Experiment/CRAG` 下执行：
+在项目根目录（RAG-learning）或进入 `Experiment/CRAG` 后执行（macOS/Linux 示例）：
 
 ```bash
-cd d:\Test\RAG\Experiment\CRAG
+cd Experiment/CRAG
 pip install -r requirements.txt
 ```
 
@@ -279,7 +279,7 @@ pip install torch transformers modelscope mineru-vl-utils PyMuPDF
 **FastAPI（推荐用于接口对接 / 前端调用）：**
 
 ```bash
-cd d:\Test\RAG\Experiment\CRAG
+cd Experiment/CRAG
 uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
@@ -290,7 +290,7 @@ uvicorn api:app --host 0.0.0.0 --port 8000
 **Streamlit（推荐用于本地试玩）：**
 
 ```bash
-cd d:\Test\RAG\Experiment\CRAG
+cd Experiment/CRAG
 streamlit run app_streamlit.py
 ```
 

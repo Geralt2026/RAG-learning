@@ -2,6 +2,15 @@
 """
 FastAPI 接口（PydanticAI 版）：问答与知识库重建
 """
+# Workaround: huggingface_hub 1.4.x 懒加载导致 is_offline_mode 导入失败，提前注入
+try:
+    import huggingface_hub.constants as _hf_constants
+    import huggingface_hub as _hf
+    if not hasattr(_hf, "is_offline_mode"):
+        _hf.is_offline_mode = _hf_constants.is_offline_mode
+except Exception:
+    pass
+
 import os
 import subprocess
 import sys

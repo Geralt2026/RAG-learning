@@ -23,7 +23,7 @@ _eval_agent = None
 def _get_eval_agent():
     global _eval_agent
     if _eval_agent is None:
-        _eval_agent = Agent(get_evaluator_model(), output_type=str, result_retries=0)
+        _eval_agent = Agent(get_evaluator_model(), output_type=str, output_retries=0)
     return _eval_agent
 
 

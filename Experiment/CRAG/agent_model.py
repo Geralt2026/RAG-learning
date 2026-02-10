@@ -40,7 +40,7 @@ def get_generator_agent():
     return Agent(
         _generator_model,
         output_type=str,
-        result_retries=0,
+        output_retries=0,
     )
 
 

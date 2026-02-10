@@ -2,6 +2,16 @@
 """
 Streamlit 交互界面：CRAG 知识库问答
 """
+# Workaround: huggingface_hub 1.4.x 懒加载在某些导入顺序下会报 cannot import 'is_offline_mode'
+# 在任意包执行 from huggingface_hub import is_offline_mode 之前，先把 is_offline_mode 注入到主模块
+try:
+    import huggingface_hub.constants as _hf_constants
+    import huggingface_hub as _hf
+    if not hasattr(_hf, "is_offline_mode"):
+        _hf.is_offline_mode = _hf_constants.is_offline_mode
+except Exception:
+    pass
+
 import streamlit as st
 from crag import run_crag
 from knowledge_base import build_knowledge_base

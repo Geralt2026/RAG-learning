@@ -1,4 +1,4 @@
-from modelscope import AutoProcessor, Qwen2VLForConditionalGeneration
+from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 from PIL import Image
 from mineru_vl_utils import MinerUClient
 
@@ -20,6 +20,6 @@ client = MinerUClient(
     processor=processor
 )
 
-image = Image.open("Experiment\CRAG\1.png")
+image = Image.open("Experiment/CRAG/1.png")
 extracted_blocks = client.two_step_extract(image)
 print(extracted_blocks)
