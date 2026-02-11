@@ -22,7 +22,8 @@ PyMuPDF>=1.24.0
 Pillow>=10.0.0
 
 # MinerU 文本识别（PDF 版面分析 + 文本抽取）
-# 需 transformers>=4.56.0
+# 需 transformers>=4.56.0；若报 is_offline_mode 错误可降级：pip install "huggingface_hub>=0.23,<1.0"
+huggingface_hub>=0.23.0
 transformers>=4.56.0
 modelscope>=1.20.0
 mineru-vl-utils

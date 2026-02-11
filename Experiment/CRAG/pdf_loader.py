@@ -13,24 +13,25 @@ from langchain_core.documents import Document
 
 
 def _get_mineru_client():
-    """获取 MinerU 客户端（懒加载）。"""
-    from modelscope import AutoProcessor, Qwen2VLForConditionalGeneration
+    """获取 MinerU 客户端（懒加载，仅在需要时加载模型）。"""
+    from transformers import AutoConfig, Qwen2VLForConditionalGeneration, Qwen2VLProcessor
     from mineru_vl_utils import MinerUClient
     import config as cfg
+    # 先加载 config 并修补：Qwen2VLConfig 顶层无 max_position_embeddings（在 text_config 中），
+    # 部分加载路径会访问 config.max_position_embeddings，导致 AttributeError，此处预先补上
+    loaded_config = AutoConfig.from_pretrained(cfg.MINERU_MODEL_ID)
+    if hasattr(loaded_config, "text_config") and not hasattr(loaded_config, "max_position_embeddings"):
+        loaded_config.max_position_embeddings = getattr(
+            loaded_config.text_config, "max_position_embeddings", 32768
+        )
     model = Qwen2VLForConditionalGeneration.from_pretrained(
         cfg.MINERU_MODEL_ID,
+        config=loaded_config,
         dtype="auto",
         device_map="auto",
     )
-    # 新版本 transformers 中 Qwen2VLConfig 的 max_position_embeddings 在 text_config 里，
-    # mineru_vl_utils 访问的是 model.config.max_position_embeddings，需补到顶层
-    if not hasattr(model.config, "max_position_embeddings") and hasattr(
-        model.config, "text_config"
-    ):
-        model.config.max_position_embeddings = getattr(
-            model.config.text_config, "max_position_embeddings", 32768
-        )
-    processor = AutoProcessor.from_pretrained(
+    # 使用 Qwen2VLProcessor 直接加载，避免 AutoProcessor 在未安装 torchvision 时走 video_processing_auto 导致 NoneType 错误
+    processor = Qwen2VLProcessor.from_pretrained(
         cfg.MINERU_MODEL_ID,
         use_fast=True,
     )
