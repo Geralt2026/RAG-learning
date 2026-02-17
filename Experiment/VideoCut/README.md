@@ -1,6 +1,6 @@
-# 智能视频合成与防重复系统
+# 智能视频合成与防重复系统（VideoCut）
 
-基于 [Feasibility.md](./Feasibility.md) 实现的云端素材库 + 分镜脚本驱动 + 防重复视频合成流水线。
+基于 [Feasibility.md](./Feasibility.md) 实现的云端素材库 + 分镜脚本驱动 + 防重复视频合成流水线。编排层使用 **LangGraph** 状态图，单文件合并素材库、分镜解析、防重复、视频合成与 Clip 变体任务。
 
 ## 功能概览
 
@@ -8,40 +8,48 @@
 - **分镜脚本**：YAML/JSON 格式 Shot List，支持 `library` 与 `user_upload` 插槽。
 - **视频合成**：FFmpeg 拼接、转场、缩放/裁剪、可选 BGM 与字幕。
 - **防重复**：随机化参数（转场/滤镜/缩放）+ 成片帧哈希与历史库相似度检测，不通过则自动重试。
+- **LangGraph 编排**：解析 → 选片 → 随机参数 → 剪辑 → 混 BGM → 查重 → 通过则注册指纹 / 不通过则重试或失败。
 
 ## 项目结构
 
 ```
-qmt/
+VideoCut/
 ├── config/           # 配置
 │   └── settings.py
 ├── models/           # 数据模型（Asset, Clip, ShotList, RandomParams 等）
-├── services/         # 核心服务
-│   ├── material_library.py   # 素材库检索与选片
-│   ├── shot_list_parser.py   # 分镜脚本解析
-│   ├── anti_duplicate.py     # 随机参数、帧哈希、查重
-│   └── video_synthesis.py   # FFmpeg 剪辑
-├── agent/            # 编排层
-│   ├── tools.py      # 选片、查重、剪辑等工具
-│   └── graph.py      # 合成流程编排（解析→选片→剪辑→查重→重试）
+├── agent/            # LangGraph 编排 + 全部业务逻辑（单文件）
+│   └── graph.py      # 状态定义、素材库/分镜/防重复/视频合成/变体任务、图节点与边、run_synthesis 入口
 ├── api/              # FastAPI
 │   └── main.py       # 防重复 API、合成触发
-├── tasks/            # 异步任务
-│   └── clip_variant_tasks.py  # 生成 Clip 多版本（镜像、变速、裁剪）
 ├── shot_lists/       # 分镜脚本示例
 │   └── cruise_scenic_v1.yaml
+├── run_synthesis_demo.py   # 命令行演示：解析、素材库、防重复参数、合成
 ├── Feasibility.md    # 技术可行性文档
 └── requirements.txt
 ```
+
+- **不再单独拆包**：原 `services/`（素材库、分镜解析、防重复、视频合成）与 `tasks/`（Clip 变体生成）已合并进 `agent/graph.py`，便于维护与阅读。
+
+## LangGraph 图结构
+
+- **状态**：`VideoCutState`（TypedDict）：`shot_list_path`、`user_uploads`、`output_dir`、`shot_list`、`attempt`、`seed`、`params`、`segment_paths`、`output_path`、`video_id`、`check_result`、`result` 等。
+- **节点**：`parse` → `gen_params` → `pick` → `concat` → `mix_bgm` → `check_duplicate` → 条件分支：
+  - 通过 → `register` → `success_result` → END
+  - 未通过且可重试 → `increment_retry` → `gen_params`（循环）
+  - 未通过且达最大重试 → `fail_result` → END
+- **入口**：`parse`；失败分支在 `parse` / `pick` / `concat` 时直接到 `fail_result` → END。
+
+可通过 `agent.graph` 中的编译后图对象做可视化（如 `get_graph().get_graph().draw_mermaid_png()`，视 LangGraph 版本而定）。
 
 ## 环境与运行
 
 ### 1. 安装依赖
 
 ```bash
-cd d:\Test\qmt
+cd VideoCut
 python -m venv .venv
-.venv\Scripts\activate   # Windows
+source .venv/bin/activate   # macOS/Linux
+# .venv\Scripts\activate    # Windows
 pip install -r requirements.txt
 ```
 
@@ -60,6 +68,7 @@ DATA_DIR=./data
 ### 3. 启动 API 服务
 
 ```bash
+cd VideoCut
 uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -76,24 +85,40 @@ from agent.graph import run_synthesis
 
 result = run_synthesis(
     shot_list_path=str(Path("shot_lists/cruise_scenic_v1.yaml").resolve()),
-    user_uploads={"intro": "D:/path/to/your_intro.mp4"},  # 可选
+    user_uploads={"intro": "/path/to/your_intro.mp4"},  # 可选
     seed=42,
 )
 print(result)  # {"success": True, "output_path": "...", "video_id": "...", ...}
 ```
 
+或运行演示脚本：
+
+```bash
+cd VideoCut
+python run_synthesis_demo.py
+```
+
 ## 素材库使用（当前为内存存储）
 
+逻辑均在 `agent/graph.py` 中，从该模块导入：
+
 ```python
-from uuid import uuid4
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # 若不在 VideoCut 根目录运行
+
 from models.asset import Asset, AssetType, AssetMetadata, Clip, ClipVariant, TransformType
-from services.material_library import add_asset, add_clip, add_clip_variant
-from tasks.clip_variant_tasks import generate_all_variants_for_clip
+from agent.graph import (
+    add_asset,
+    add_clip,
+    add_clip_variant,
+    generate_all_variants_for_clip,
+)
 
 # 注册一条素材
 asset = Asset(
     type=AssetType.UPLOAD,
-    source_file_path="D:/videos/cruise_deck.mp4",
+    source_file_path="/path/to/cruise_deck.mp4",
     duration_sec=120,
     metadata=AssetMetadata(tags=["cruise", "deck", "wide"], shot_type="wide"),
 )
@@ -117,7 +142,7 @@ for v in variants:
 见 `shot_lists/cruise_scenic_v1.yaml`：
 
 - `name` / `version` / `total_duration_target`
-- `shots`: 列表，每项含 `slot`、`type`（`library` | `user_upload`）、`user_slot_id`（用户片段 key）、`constraints`（tags、duration_range、shot_type）
+- `shots`：列表，每项含 `slot`、`type`（`library` | `user_upload`）、`user_slot_id`（用户片段 key）、`constraints`（tags、duration_range、shot_type）
 
 ## 防重复策略
 
@@ -129,9 +154,8 @@ for v in variants:
 
 ## 扩展与生产化
 
-- **持久化**：将 `services/material_library.py` 与 `services/anti_duplicate.py` 中的内存字典改为 SQLAlchemy + PostgreSQL，指纹可存表或 Redis。
+- **持久化**：将 `agent/graph.py` 中素材库与指纹的内存字典改为 SQLAlchemy + PostgreSQL，指纹可存表或 Redis。
 - **对象存储**：上传与成片输出改为 OSS/COS，`source_file_path` / `output_path` 存 URL 或 bucket key。
-- **任务队列**：ClipVariant 生成、成片剪辑、爬虫等改为 Celery/Dramatiq 异步任务。
-- **LangGraph**：在 `agent/graph.py` 中接入 LangGraph 状态图，实现更复杂分支与人工干预节点。
+- **任务队列**：ClipVariant 生成、成片剪辑等可改为 Celery/Dramatiq 异步任务。
 
 详细设计见 [Feasibility.md](./Feasibility.md)。

@@ -17,8 +17,9 @@ RAG/
 ├── PydanticAI/                # PydanticAI 框架实践（Agent、工具、流式、RAG、AG-UI、工作流）
 ├── PydanticGraph/             # Pydantic Graph 图式工作流（售货机、邮件反馈、问答图）
 ├── Experiment/                # 实验性示例
+│   ├── graph-rag-agent/       # GraphRAG + DeepSearch 多 Agent 问答（Neo4j、Plan-Execute-Report）
 │   ├── CRAG/                  # 纠正式 RAG（论文实现，FastAPI + Streamlit，MinerU PDF）
-│   ├── VideoCut/              # 智能视频合成与防重复（分镜脚本、素材库、FFmpeg）
+│   ├── VideoCut/              # 智能视频合成与防重复（LangGraph 状态图、分镜脚本、素材库、FFmpeg）
 │   └── 其他示例               # weather_agent、stream_whales、quantqmt 等
 ├── Archive/                   # 历史代码归档
 └── Data/                      # 测试数据（JSON、TXT）
@@ -119,8 +120,9 @@ streamlit run app_file_uploader.py  # 启动文件上传界面
 
 | 子目录/文件 | 说明 |
 |-------------|------|
+| **graph-rag-agent/** | **GraphRAG + DeepSearch 多 Agent 问答系统**：知识图谱增强 RAG、私域深度搜索、多级检索（本地/全局/混合）。多种 Agent：NaiveRagAgent、GraphAgent、HybridAgent、DeepResearchAgent、**FusionGraphRAGAgent**（Plan-Execute-Report 多智能体协作）。Neo4j 图谱构建与社区摘要、增量更新、20+ 评估指标。FastAPI + Streamlit，支持流式输出与推理轨迹可视化。详见 [Experiment/graph-rag-agent/readme.md](Experiment/graph-rag-agent/readme.md) |
 | **CRAG/** | **纠正式 RAG**：基于论文《Corrective Retrieval Augmented Generation》实现。检索评估 → Correct/Incorrect/Ambiguous 动作 → 知识精炼或网络搜索 → 生成。FastAPI + Streamlit，PDF 使用 MinerU 做版面分析与文本抽取。详见 [Experiment/CRAG/README.md](Experiment/CRAG/README.md) |
-| **VideoCut/** | **智能视频合成与防重复**：分镜脚本（YAML）驱动、云端素材库、FFmpeg 剪辑、转场/滤镜随机化、成片帧哈希防重复。含 Agent 编排、FastAPI。详见 [Experiment/VideoCut/README.md](Experiment/VideoCut/README.md) |
+| **VideoCut/** | **智能视频合成与防重复**：**LangGraph 状态图**编排（解析→选片→随机参数→剪辑→查重→重试）。分镜脚本（YAML）驱动、云端素材库、FFmpeg 剪辑、转场/滤镜随机化、成片帧哈希防重复。FastAPI。详见 [Experiment/VideoCut/README.md](Experiment/VideoCut/README.md) |
 | `weather_agent.py` / `weather_agent_gradio.py` | 天气 Agent 示例 |
 | `stream_whales.py` | 流式输出示例（如鲸鱼表格） |
 | `quantqmt.py` | 量化/策略相关示例 |
@@ -214,8 +216,9 @@ ollama pull qwen3-embedding:4b
 - **PydanticAI**：类型安全开发、流式输出、RAG、工作流（见 [PydanticAI/README.md](PydanticAI/README.md)）
 - **PydanticGraph**：图式状态机与多节点工作流
 - **Agno / Agents**：多模态 Agent、Learning、助手型 Agent
+- **Experiment/graph-rag-agent**：GraphRAG + DeepSearch、多 Agent 协作（Plan-Execute-Report）、Neo4j 知识图谱
 - **Experiment/CRAG**：纠正式 RAG、检索评估与知识精炼
-- **Experiment/VideoCut**：分镜驱动视频合成与防重复
+- **Experiment/VideoCut**：LangGraph 状态图、分镜驱动视频合成与防重复
 
 ## 🚀 快速开始
 
@@ -243,7 +246,18 @@ cd PydanticGraph && python vending_machine.py
 ```
 详见 [PydanticAI/README.md](PydanticAI/README.md)。
 
-### 5. CRAG（纠正式 RAG）
+### 5. graph-rag-agent（GraphRAG + 多 Agent 问答）
+```bash
+cd Experiment/graph-rag-agent
+pip install -r requirements.txt
+# 配置 .env（Neo4j、LLM API 等），构建图谱后：
+uvicorn server.main:app --reload
+streamlit run frontend/app.py   # 聊天 UI
+# 测试：python -m unittest discover test -v
+```
+详见 [Experiment/graph-rag-agent/readme.md](Experiment/graph-rag-agent/readme.md)。
+
+### 6. CRAG（纠正式 RAG）
 ```bash
 cd Experiment/CRAG
 pip install -r requirements.txt
@@ -253,20 +267,21 @@ uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 详见 [Experiment/CRAG/README.md](Experiment/CRAG/README.md)。
 
-### 6. Agno 入门
+### 7. Agno 入门
 ```bash
 cd Agno/00_Get_Started
 python 00_HelloAgno.py   # 需 Ollama 与 qwen3-vl:4b
 ```
 
-### 7. VideoCut（智能视频合成与防重复）
+### 8. VideoCut（LangGraph 视频合成与防重复）
 ```bash
 cd Experiment/VideoCut
 pip install -r requirements.txt
 # 需安装 FFmpeg 并加入 PATH
 uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+# 或命令行演示：python run_synthesis_demo.py
 ```
-详见 [Experiment/VideoCut/README.md](Experiment/VideoCut/README.md)。
+编排为 LangGraph 状态图（parse → pick → concat → check_duplicate → 通过/重试）。详见 [Experiment/VideoCut/README.md](Experiment/VideoCut/README.md)。
 
 ## 📝 项目特点
 
@@ -275,8 +290,9 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 - ✅ **多框架支持**：LangChain、LangGraph、PydanticAI、Pydantic Graph、Agno
 - ✅ **多模型支持**：OpenAI、Ollama、阿里云百炼、Google Gemini
 - ✅ **Web 与 API**：Streamlit、FastAPI、Gradio
-- ✅ **图式工作流**：LangGraph / Pydantic Graph 状态机与 DAG 示例
+- ✅ **图式工作流**：LangGraph / Pydantic Graph 状态机与 DAG 示例（含 VideoCut 合成编排）
 - ✅ **实验性 RAG**：CRAG 纠正式检索、知识精炼与动作分支
+- ✅ **GraphRAG + 多 Agent**：graph-rag-agent 知识图谱增强 RAG、Plan-Execute-Report 多智能体
 - ✅ **多模态与 Agent**：Agno 多模态 Agent、Learning、助手型 Agent
 - ✅ **详细文档**：各子项目配有 README 与学习路线
 
@@ -284,6 +300,7 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 - **LangChain_RAG_Proj**：[详细技术文档](LangChain_RAG_Proj/README.md)
 - **PydanticAI**：[示例与学习路线](PydanticAI/README.md)
+- **Experiment/graph-rag-agent**：[GraphRAG + DeepSearch 多 Agent 问答](Experiment/graph-rag-agent/readme.md)
 - **Experiment/CRAG**：[CRAG 论文与实现说明](Experiment/CRAG/README.md)
 - **Experiment/VideoCut**：[视频合成与防重复](Experiment/VideoCut/README.md)
 - **LangChain**：https://python.langchain.com
