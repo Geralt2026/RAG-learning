@@ -5,7 +5,7 @@
 ## 📚 项目结构
 
 ```
-RAG-learning/
+RAG/
 ├── Agents/                    # 多模态 Agent（Agno + Gemini / Ollama）
 │   └── multimodal_agent/      # 多模态推理、视频理解等
 ├── Agno/                      # Agno 框架入门与助手
@@ -259,6 +259,15 @@ cd Agno/00_Get_Started
 python 00_HelloAgno.py   # 需 Ollama 与 qwen3-vl:4b
 ```
 
+### 7. VideoCut（智能视频合成与防重复）
+```bash
+cd Experiment/VideoCut
+pip install -r requirements.txt
+# 需安装 FFmpeg 并加入 PATH
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+详见 [Experiment/VideoCut/README.md](Experiment/VideoCut/README.md)。
+
 ## 📝 项目特点
 
 - ✅ **完整教程**：从基础到进阶的完整学习路径
@@ -293,4 +302,4 @@ python 00_HelloAgno.py   # 需 Ollama 与 qwen3-vl:4b
 ---
 
 **开发者**: Beamus Wayne  
-**最后更新**: 2026-02-07
+**最后更新**: 2026-02-11

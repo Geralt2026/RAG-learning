@@ -66,3 +66,7 @@ chat_history/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Large archives (over GitHub 100MB limit)
+Experiment/Lake-2026.02.08-bak.zip
+Experiment/.openclaw.zip
