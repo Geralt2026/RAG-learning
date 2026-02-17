@@ -92,13 +92,7 @@ def api_run_synthesis(
 def health():
     return {"status": "ok"}
 
-<<<<<<< HEAD
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-=======
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
->>>>>>> 6ec64b6709d2c742e322ca12b823ae7860a0f0df
