@@ -1,0 +1,14 @@
+[
+    {
+        "question_id": 1,
+        "question": "优秀学生申请的条件?"
+    },
+    {
+        "question_id": 2,
+        "question": "获得优秀学生称号的奖励是什么?"
+    },
+    {
+        "question_id": 3,
+        "question": "国家奖学金和国家励志奖学金互斥吗?"
+    }
+]

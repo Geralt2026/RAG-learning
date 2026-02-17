@@ -1,0 +1,125 @@
+<svg width="1100" height="900" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- 渐变定义 -->
+        <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#6b7fd7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2a5298;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="graphGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#5dbea3;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3e9b85;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="deepGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#e78e66;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#d46f48;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="fusionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#8a60c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#6a42a8;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="infrastructureGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#777;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#555;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- 箭头定义 -->
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
+        </marker>
+    </defs>
+    
+    <!-- 背景 -->
+    <rect width="100%" height="100%" fill="#f9f9f9" />
+    
+    <!-- 标题 -->
+    <rect x="10" y="10" width="1080" height="60" rx="5" fill="url(#headerGradient)" />
+    <text x="550" y="50" font-family="Times New Roman, SimSun" font-size="30" font-weight="bold" text-anchor="middle" fill="white">GraphRAG + DeepSearch 融合架构</text>
+    
+    <!-- 中间：Fusion GraphRAG 部分 - 上移以避免重叠 -->
+    <rect x="300" y="90" width="500" height="180" rx="10" fill="#f5f2f9" stroke="#8a60c7" stroke-width="2" />
+    
+    <!-- 融合组件详情 -->
+    <rect x="320" y="110" width="460" height="140" rx="5" fill="#ffffff" stroke="#8a60c7" stroke-width="2" />
+    <text x="550" y="135" font-family="Times New Roman, SimSun" font-size="18" text-anchor="middle" font-weight="bold">Agent协调系统</text>
+    <text x="550" y="165" font-family="Times New Roman, SimSun" font-size="15" text-anchor="middle">检索计划生成器 (任务分析与优先级排序)</text>
+    <text x="550" y="195" font-family="Times New Roman, SimSun" font-size="15" text-anchor="middle">多路径执行 (并行执行多种搜索策略)</text>
+    <text x="550" y="225" font-family="Times New Roman, SimSun" font-size="15" text-anchor="middle">社区感知 (知识聚集结构识别)</text>
+    <text x="550" y="245" font-family="Times New Roman, SimSun" font-size="15" text-anchor="middle">Chain of Exploration (知识图谱自主探索)</text>
+    
+    <!-- 底层基础设施 -->
+    <rect x="50" y="820" width="1000" height="60" rx="5" fill="url(#infrastructureGradient)" />
+    <text x="550" y="860" font-family="Times New Roman, SimSun" font-size="22" text-anchor="middle" fill="white">基础设施层 (Neo4j, LLM, Embeddings)</text>
+    
+    <!-- 左侧：GraphRAG 部分 - 下移留出空间 -->
+    <rect x="50" y="290" width="420" height="470" rx="10" fill="#f0f4f9" stroke="#ccc" stroke-width="1" />
+    <rect x="50" y="250" width="170" height="40" rx="5" fill="url(#graphGradient)" />
+    <text x="135" y="277" font-family="Times New Roman, SimSun" font-size="22" text-anchor="middle" fill="white">GraphRAG</text>
+    
+    <!-- GraphRAG 内部组件 -->
+    <rect x="70" y="310" width="380" height="90" rx="5" fill="#ffffff" stroke="#5dbea3" stroke-width="2" />
+    <text x="260" y="335" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">知识图谱构建</text>
+    <text x="260" y="360" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">实体关系提取 (LLM驱动)</text>
+    <text x="260" y="385" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">增量更新 (文件变更检测)</text>
+    
+    <rect x="70" y="410" width="380" height="90" rx="5" fill="#ffffff" stroke="#5dbea3" stroke-width="2" />
+    <text x="260" y="435" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">索引与社区构建</text>
+    <text x="260" y="460" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">实体索引 (向量相似度合并)</text>
+    <text x="260" y="485" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">社区检测 (Leiden/SLLPA算法)</text>
+    
+    <rect x="70" y="510" width="380" height="90" rx="5" fill="#ffffff" stroke="#5dbea3" stroke-width="2" />
+    <text x="260" y="535" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">图谱检索</text>
+    <text x="260" y="560" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">本地搜索 (社区内精确)</text>
+    <text x="260" y="585" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">全局搜索 (Map-Reduce模式)</text>
+    
+    <rect x="70" y="610" width="380" height="90" rx="5" fill="#ffffff" stroke="#5dbea3" stroke-width="2" />
+    <text x="260" y="635" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">双级检索 (LightRAG)</text>
+    <text x="260" y="660" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">低级：实体细节检索</text>
+    <text x="260" y="685" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">高级：主题概念检索</text>
+    
+    <!-- 右侧：DeepSearch 部分 - 下移留出空间 -->
+    <rect x="630" y="290" width="420" height="470" rx="10" fill="#fcf5f2" stroke="#ccc" stroke-width="1" />
+    <rect x="880" y="250" width="170" height="40" rx="5" fill="url(#deepGradient)" /> <!-- 移到右边与GraphRAG对称 -->
+    <text x="965" y="277" font-family="Times New Roman, SimSun" font-size="22" text-anchor="middle" fill="white">DeepSearch</text>
+    
+    <!-- DeepSearch 内部组件 -->
+    <rect x="650" y="310" width="380" height="90" rx="5" fill="#ffffff" stroke="#e78e66" stroke-width="2" />
+    <text x="840" y="335" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">思考引擎</text>
+    <text x="840" y="360" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">Chain-of-Thought (多轮推理)</text>
+    <text x="840" y="385" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">分支推理 (多路径思考)</text>
+    
+    <rect x="650" y="410" width="380" height="90" rx="5" fill="#ffffff" stroke="#e78e66" stroke-width="2" />
+    <text x="840" y="435" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">查询生成与执行</text>
+    <text x="840" y="460" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">查询分解 (从复杂到简单)</text>
+    <text x="840" y="485" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">后续查询生成 (迭代优化)</text>
+    
+    <rect x="650" y="510" width="380" height="90" rx="5" fill="#ffffff" stroke="#e78e66" stroke-width="2" />
+    <text x="840" y="535" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">证据收集与验证</text>
+    <text x="840" y="560" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">证据链追踪 (信息溯源)</text>
+    <text x="840" y="585" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">答案验证 (多角度检查)</text>
+    
+    <rect x="650" y="610" width="380" height="90" rx="5" fill="#ffffff" stroke="#e78e66" stroke-width="2" />
+    <text x="840" y="635" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle" font-weight="bold">反馈循环</text>
+    <text x="840" y="660" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">知识空白识别 (信息缺失检测)</text>
+    <text x="840" y="685" font-family="Times New Roman, SimSun" font-size="14" text-anchor="middle">整合与合成 (生成最终报告)</text>
+    
+    <!-- Fusion GraphRAG 标签 - 增大空间 -->
+    <rect x="400" y="760" width="300" height="40" rx="5" fill="url(#fusionGradient)" />
+    <text x="550" y="787" font-family="Times New Roman, SimSun" font-size="22" text-anchor="middle" fill="white">Fusion GraphRAG</text>
+    
+    <!-- 各层间连接 - 垂直线 -->
+    <line x1="550" y1="270" x2="550" y2="760" stroke="#8a60c7" stroke-width="3" stroke-dasharray="10,5" marker-end="url(#arrowhead)" />
+    <line x1="260" y1="720" x2="260" y2="820" stroke="#5dbea3" stroke-width="2" marker-end="url(#arrowhead)" />
+    <line x1="840" y1="720" x2="840" y2="820" stroke="#e78e66" stroke-width="2" marker-end="url(#arrowhead)" />
+    
+    <!-- 箭头从外部绕过 - 左侧GraphRAG到Agent -->
+    <path d="M 135 250 C 50 200, 50 150, 200 150, 300 100" stroke="#5dbea3" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+    
+    <!-- 箭头从外部绕过 - 右侧DeepSearch到Agent -->
+    <path d="M 965 250 C 1050 200, 1050 150, 900 150, 800 100" stroke="#e78e66" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+    
+    <!-- 说明框 -->
+    <rect x="50" y="710" width="1000" height="40" rx="5" fill="#f0f0f0" stroke="#ccc" stroke-width="1" />
+    <text x="550" y="735" font-family="Times New Roman, SimSun" font-size="16" text-anchor="middle">
+        Fusion GraphRAG 集成了图谱结构化知识与深度搜索多步迭代推理，实现知识与推理的统一
+    </text>
+</svg>

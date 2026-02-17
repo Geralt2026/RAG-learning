@@ -1,0 +1,16 @@
+.vscode/
+data/
+__pycache__/
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.egg-info/
+cache/
+lib/
+.env
+evaluation_results/
+evaluation_results_with_golden/
+evaluation_results_no_golden/
+file_registry.json
+documents/
+hotpot_dev_distractor_v1.json
+outputs/
