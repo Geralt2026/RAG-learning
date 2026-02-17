@@ -17,9 +17,9 @@ opencv-python-headless>=4.8
 imagehash>=4.3
 Pillow>=10.0
 
-# 可选：LangGraph（编排可先用内置状态机，后续可接入）
-# langgraph>=0.0.20
-# langchain-core>=0.2
+# LangGraph 编排
+langgraph>=0.0.20
+langchain-core>=0.2
 
 # 可选：数据库
 # sqlalchemy>=2.0

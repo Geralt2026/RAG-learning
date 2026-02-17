@@ -1,5 +1,12 @@
 """FastAPI 入口：素材库、防重复、合成触发等接口。"""
+import sys
 from pathlib import Path
+
+# 保证从任意工作目录启动时都能找到 config、agent 等包（项目根 = VideoCut）
+_project_root = Path(__file__).resolve().parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
@@ -7,18 +14,14 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from config.settings import get_settings
-from services.anti_duplicate import (
+from agent.graph import (
+    run_synthesis,
     check_duplicate,
-    generate_random_params,
     get_random_params_space,
-    extract_fingerprint,
-    register_fingerprint,
 )
-from models.anti_duplicate import CheckResult
-from agent.graph import run_synthesis
 
 
-app = FastAPI(title="智能视频合成与防重复 API", version="1.0.0")
+app = FastAPI(title="视频合成与防重复", version="1.0.0")
 
 
 # ---------- 防重复 ----------
@@ -88,3 +91,7 @@ def api_run_synthesis(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
